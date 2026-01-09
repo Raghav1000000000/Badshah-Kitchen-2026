@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 type MenuItem = {
   id: string
@@ -16,25 +17,37 @@ export default function AdminMenuPage() {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [category, setCategory] = useState('')
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  // Check staff authentication
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return router.replace('/staff-login')
+
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (!data || data.role !== 'staff') router.replace('/staff-login')
+          else setLoading(false)
+        })
+    })
+  }, [router])
 
   useEffect(() => {
-    fetchMenu()
-  }, [])
+    if (!loading) fetchMenu()
+  }, [loading])
 
   const fetchMenu = async () => {
-    const { data } = await supabase
-      .from('menu')
-      .select('*')
-      .order('category')
-
+    const { data } = await supabase.from('menu').select('*').order('category')
     setMenu(data || [])
   }
 
   const addItem = async () => {
-    if (!name || !price || !category) {
-      alert('Fill all fields')
-      return
-    }
+    if (!name || !price || !category) return alert('Fill all fields')
 
     await supabase.from('menu').insert({
       name,
@@ -50,30 +63,21 @@ export default function AdminMenuPage() {
   }
 
   const toggleAvailability = async (id: string, value: boolean) => {
-    await supabase
-      .from('menu')
-      .update({ available: !value })
-      .eq('id', id)
-
+    await supabase.from('menu').update({ available: !value }).eq('id', id)
     fetchMenu()
   }
 
   const updatePrice = async (id: string, newPrice: number) => {
     if (!newPrice) return
-
-    await supabase
-      .from('menu')
-      .update({ price: newPrice })
-      .eq('id', id)
-
+    await supabase.from('menu').update({ price: newPrice }).eq('id', id)
     fetchMenu()
   }
 
+  if (loading) return <div>Loading...</div>
+
   return (
     <div className="min-h-screen bg-stone-100 p-4">
-      <h1 className="text-2xl font-bold text-center mb-4">
-        Admin Menu
-      </h1>
+      <h1 className="text-2xl font-bold text-center mb-4">Admin Menu</h1>
 
       {/* ADD ITEM */}
       <div className="bg-white p-4 rounded-xl mb-4">
@@ -128,19 +132,13 @@ export default function AdminMenuPage() {
                 type="number"
                 className="w-16 p-1 border rounded"
                 defaultValue={item.price}
-                onBlur={e =>
-                  updatePrice(item.id, Number(e.target.value))
-                }
+                onBlur={e => updatePrice(item.id, Number(e.target.value))}
               />
 
               <button
-                onClick={() =>
-                  toggleAvailability(item.id, item.available)
-                }
+                onClick={() => toggleAvailability(item.id, item.available)}
                 className={`px-3 py-1 rounded text-white ${
-                  item.available
-                    ? 'bg-green-600'
-                    : 'bg-red-600'
+                  item.available ? 'bg-green-600' : 'bg-red-600'
                 }`}
               >
                 {item.available ? 'ON' : 'OFF'}

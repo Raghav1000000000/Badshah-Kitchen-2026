@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 type OrderItem = {
   id: string
@@ -22,8 +23,30 @@ type Order = {
 
 export default function KitchenPage() {
   const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
+  // Check staff authentication
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return router.replace('/staff-login') // redirect if not logged in
+
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (!data || data.role !== 'staff') router.replace('/staff-login')
+          else setLoading(false)
+        })
+    })
+  }, [router])
+
+  // Fetch orders and subscribe
+  useEffect(() => {
+    if (loading) return
+
     fetchOrders()
 
     const channel = supabase
@@ -31,16 +54,14 @@ export default function KitchenPage() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
-        () => {
-          fetchOrders()
-        }
+        () => fetchOrders()
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [loading])
 
   const fetchOrders = async () => {
     const since = new Date()
@@ -65,34 +86,26 @@ export default function KitchenPage() {
       .gte('created_at', since.toISOString())
       .order('created_at', { ascending: false })
 
-    if (!error && data) {
-      setOrders(data as Order[])
-    }
+    if (!error && data) setOrders(data as Order[])
   }
 
   const markCompleted = async (id: string) => {
-    await supabase
-      .from('orders')
-      .update({ status: 'completed' })
-      .eq('id', id)
-
+    await supabase.from('orders').update({ status: 'completed' }).eq('id', id)
     fetchOrders()
   }
 
+  if (loading) return <div>Loading...</div>
+
   return (
     <div className="min-h-screen bg-black text-white p-4">
-      <h1 className="text-2xl font-bold text-center mb-4">
-        Kitchen Orders
-      </h1>
+      <h1 className="text-2xl font-bold text-center mb-4">Kitchen Orders</h1>
 
       <div className="space-y-4">
         {orders.map(order => (
           <div
             key={order.id}
             className={`p-4 rounded-xl ${
-              order.status === 'completed'
-                ? 'bg-gray-700'
-                : 'bg-green-800'
+              order.status === 'completed' ? 'bg-gray-700' : 'bg-green-800'
             }`}
           >
             <div className="flex justify-between mb-2">
@@ -100,9 +113,7 @@ export default function KitchenPage() {
                 <p className="font-semibold">
                   {order.customer_name} — Table {order.table_number}
                 </p>
-                <p className="text-sm text-gray-300">
-                  {order.phone}
-                </p>
+                <p className="text-sm text-gray-300">{order.phone}</p>
               </div>
 
               {order.status === 'pending' && (
