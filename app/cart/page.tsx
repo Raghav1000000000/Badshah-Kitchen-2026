@@ -92,7 +92,7 @@ export default function CartPage() {
       setCart([])
 
       alert('Order placed successfully!')
-      router.push('/menu')
+      router.push(`/bill/${order.id}`)
 
     } catch (err) {
       console.error(err)
