@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "@/lib/SessionContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { formatDate, formatTime } from "@/lib/dateUtils";
 
 type OrderItem = {
   id: string;
@@ -45,8 +46,10 @@ export default function OrdersPage() {
       return;
     }
 
-    async function fetchOrders() {
-      setIsLoading(true);
+    async function fetchOrders(showLoading = true) {
+      if (showLoading) {
+        setIsLoading(true);
+      }
       setError(null);
 
       try {
@@ -65,37 +68,48 @@ export default function OrdersPage() {
           .eq('session_id', sessionId)
           .order('created_at', { ascending: false });
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+          console.error('Failed to fetch orders:', fetchError);
+          throw fetchError;
+        }
 
         setOrders(data || []);
       } catch (err) {
         console.error('Error fetching orders:', err);
         setError('Failed to load orders. Please try again.');
       } finally {
-        setIsLoading(false);
+        if (showLoading) {
+          setIsLoading(false);
+        }
       }
     }
 
-    fetchOrders();
+    // Initial fetch with loading indicator
+    fetchOrders(true);
+    
+    // Subscribe to real-time updates for this customer's orders only
+    const channel = supabase
+      .channel(`customer-orders-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'orders',
+          filter: `session_id=eq.${sessionId}`, // Only this customer's orders
+        },
+        (payload) => {
+          console.log('Real-time order update:', payload);
+          // Refresh orders without loading indicator
+          fetchOrders(false);
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [sessionId, isLoadingSession]);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status.toUpperCase()) {
@@ -235,6 +249,9 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-gray-600">
                 {orders.length} {orders.length === 1 ? 'order' : 'orders'} found
+              </p>
+              <p className="text-xs text-gray-500">
+                Session: {sessionId?.substring(0, 8)}...
               </p>
             </div>
 

@@ -21,6 +21,7 @@ CREATE TABLE public.menu_items (
 ```sql
 CREATE TABLE public.orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number SERIAL NOT NULL,
   session_id text NOT NULL,
   customer_name text,
   customer_phone text,

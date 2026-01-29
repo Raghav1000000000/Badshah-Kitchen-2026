@@ -73,7 +73,7 @@ export async function submitOrder(
         status: 'PLACED',
         total_amount: totalAmount,
       })
-      .select('id')
+      .select('id, order_number')
       .single();
 
     if (orderError) {
@@ -114,6 +114,7 @@ export async function submitOrder(
     const orderId = order.id;
     console.log('✅ Order created successfully');
     console.log('🆔 Order ID:', orderId);
+    console.log('🔢 Order Number:', order.order_number);
 
     // Step 2: Prepare order items for insertion
     const orderItems = prepareOrderItems(cart, orderId);
