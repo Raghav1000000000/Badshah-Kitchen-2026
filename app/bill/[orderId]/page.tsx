@@ -91,8 +91,18 @@ export default function BillPage() {
     setIsSubmittingFeedback(true);
 
     try {
-      // Save feedback to database (you can create a feedback table)
-      // For now, we'll just mark the order as feedback_given
+      // Insert feedback into feedback table
+      const { error: feedbackError } = await supabase
+        .from('feedback')
+        .insert({
+          order_id: orderId,
+          rating: rating,
+          comment: comment.trim() || null,
+        });
+
+      if (feedbackError) throw feedbackError;
+
+      // Mark order as feedback_given
       const { error: updateError } = await supabase
         .from('orders')
         .update({ feedback_given: true })

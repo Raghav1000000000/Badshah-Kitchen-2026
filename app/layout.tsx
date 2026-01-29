@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/lib/SessionContext";
 import { KitchenAuthProvider } from "@/lib/kitchenAuth";
+import { AdminAuthProvider } from "@/lib/adminAuth";
 
 export const metadata: Metadata = {
   title: "Badshah's Kitchen",
@@ -18,7 +19,9 @@ export default function RootLayout({
       <body className="antialiased">
         <SessionProvider>
           <KitchenAuthProvider>
-            {children}
+            <AdminAuthProvider>
+              {children}
+            </AdminAuthProvider>
           </KitchenAuthProvider>
         </SessionProvider>
       </body>

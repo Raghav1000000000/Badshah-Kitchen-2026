@@ -149,20 +149,24 @@ export default function KitchenPage() {
     }
   };
 
-  // Validate status transition - allow jumping to any forward status
+  // Validate status transition - allow both forward and backward transitions
   const isValidTransition = (currentStatus: string, newStatus: string): boolean => {
-    const validTransitions: Record<string, string[]> = {
-      'PLACED': ['ACCEPTED', 'PREPARING', 'READY', 'COMPLETED'],
-      'ACCEPTED': ['PREPARING', 'READY', 'COMPLETED'],
-      'PREPARING': ['READY', 'COMPLETED'],
-      'READY': ['COMPLETED'],
-      'COMPLETED': [], // No transitions from completed
-    };
-
     const current = currentStatus.toUpperCase();
     const next = newStatus.toUpperCase();
     
-    return validTransitions[current]?.includes(next) || false;
+    // Don't allow transitioning to the same status
+    if (current === next) {
+      return false;
+    }
+    
+    // Can't change status once completed
+    if (current === 'COMPLETED') {
+      return false;
+    }
+    
+    // Allow all other transitions (forward and backward)
+    const validStatuses = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'COMPLETED'];
+    return validStatuses.includes(next);
   };
 
   // Update order status in Supabase
@@ -176,11 +180,12 @@ export default function KitchenPage() {
 
     // Validate status transition before updating
     if (!isValidTransition(order.status, newStatus)) {
-      const message = `Invalid status transition: ${order.status} → ${newStatus}\n\nAllowed transitions:\n` +
-        `PLACED → ACCEPTED, PREPARING, READY, COMPLETED\n` +
-        `ACCEPTED → PREPARING, READY, COMPLETED\n` +
-        `PREPARING → READY, COMPLETED\n` +
-        `READY → COMPLETED`;
+      const message = `Invalid status transition: ${order.status} → ${newStatus}\n\n` +
+        (order.status === 'COMPLETED' 
+          ? 'Cannot change status of completed orders.'
+          : order.status === newStatus
+          ? 'Order is already in this status.'
+          : 'Invalid status selected.');
       
       console.error(`❌ Invalid transition blocked for order #${order.order_number}: ${order.status} → ${newStatus}`);
       alert(message);

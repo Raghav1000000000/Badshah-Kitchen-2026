@@ -29,4 +29,5 @@ export type OrderItemInsert = {
   order_id: string; // Set when creating the order
   menu_item_id: string; // From CartItem.id
   quantity: number; // From CartItem.quantity
+  price_at_time: number; // Price in paise at time of order (preserves historical pricing)
 };
