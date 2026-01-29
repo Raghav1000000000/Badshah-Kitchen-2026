@@ -1,198 +1,304 @@
-# Badshah's Kitchen - Café Ordering App
+# 🍽️ Badshah's Kitchen
 
-A mobile-first café ordering application built with Next.js 15, App Router, and Tailwind CSS.
+Modern mobile-first café ordering system with real-time order management.
 
-## Features
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com/)
 
-- **Browse Menu**: View café items organized by categories (Coffee, Pastries, Food, Beverages)
-- **Filter by Category**: Quickly find what you're looking for
-- **Shopping Cart**: Add items, adjust quantities, and view total (client-side only)
-- **Simple Checkout**: Place orders with a single click
-- **Session Tracking**: Persistent device session using localStorage (no auth required)
-- **Mobile-First Design**: Optimized for mobile devices with responsive layout
+## ✨ Features
 
-## Cart Behavior
+### 👥 Customer Experience
+- 📱 Mobile-first responsive design
+- 🗂️ Browse menu by category
+- 🛒 Real-time shopping cart
+- 📊 Live order status tracking
+- ⭐ Feedback and ratings system
+- 🎨 Beautiful cafe theme (stone, amber, green)
 
-**Important:** The cart is intentionally ephemeral and client-side only:
-- ✅ Lives in React component state (memory)
-- ✅ Stores full menu item data for display (name, price, category)
-- ✅ No database writes or persistence
-- ✅ Automatically cleared after order placement
-- ✅ Resets on page refresh
-- ✅ Safe to clear at any time
+### 🔪 Kitchen Dashboard
+- 📋 Real-time order management
+- 🔄 Status updates (Placed → Accepted → Preparing → Ready → Completed)
+- 🔍 Filter orders by status
+- 🔐 Password-protected access
+- ⚡ WebSocket-based live updates
 
-**Order Submission Structure:**
-When placing an order, cart data is transformed for database insertion:
-- `orders` table: stores session_id, customer info, total_amount (calculated), status
-- `order_items` table: stores only menu_item_id (from cart item.id) and quantity
-- Cart's full MenuItem data (name, price, category) is NOT stored in order_items
+### 👨‍💼 Admin Panel
+- 📝 Complete menu CRUD operations
+- 🏷️ Custom category management
+- 📊 Daily statistics dashboard
+- 📈 Clickable stats with detailed views
+- 💬 View all customer feedback
+- 🔐 Password-protected access
 
-This is a demo app. For production, you'd add localStorage persistence, API integration, and payment processing.
+## 🛠️ Tech Stack
 
-## Tech Stack
+| Category | Technology |
+|----------|-----------|
+| **Framework** | Next.js 15 (App Router) |
+| **Language** | TypeScript 5 |
+| **UI Library** | React 19 |
+| **Styling** | Tailwind CSS |
+| **Database** | Supabase (PostgreSQL) |
+| **Real-time** | Supabase Realtime (WebSockets) |
+| **Authentication** | Simple password-based |
 
-- **Next.js 15** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **React 19** for UI components
-- **Supabase** for database (menu items and orders)
+## 🗄️ Database Architecture
 
-## Getting Started
+```
+┌──────────────┐
+│   orders     │
+├──────────────┤
+│ id (UUID)    │◄─┐
+│ order_number │  │
+│ session_id   │  │
+│ customer_name│  │
+│ customer_phone  │
+│ status       │  │
+│ total_amount │  │
+└──────────────┘  │
+                  │
+┌──────────────┐  │  ┌─────────────┐
+│ order_items  │──┘  │ menu_items  │
+├──────────────┤◄────├─────────────┤
+│ id           │     │ id (UUID)   │
+│ order_id (FK)│     │ name        │
+│ menu_item_id │─────►│ category    │
+│ quantity     │     │ price       │
+│ price_at_time│     │ is_available│
+└──────────────┘     │ is_special  │
+                     └─────────────┘
+┌──────────────┐
+│  feedback    │
+├──────────────┤
+│ id           │
+│ order_id (FK)│──┐
+│ rating (1-5) │  │
+│ comment      │  │
+│ created_at   │  │
+└──────────────┘  │
+```
 
-### 1. Install dependencies
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18 or higher
+- npm or yarn
+- Supabase account (free tier works)
+
+### Installation
 
 ```bash
+# Clone repository
+git clone <your-repo-url>
+cd badshahs-kitchen
+
+# Install dependencies
 npm install
-```
 
-### 2. Configure Supabase
+# Copy environment template
+cp .env.example .env.local
 
-Create a `.env.local` file in the root directory:
+# Edit .env.local with your credentials
+# (See Environment Setup below)
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-```
-
-Get these values from your Supabase project settings.
-
-### 3. Run the development server
-
-```bash
+# Run development server
 npm run dev
 ```
 
-### 4. Open the app
+Visit [http://localhost:3000](http://localhost:3000)
 
-Open [http://localhost:3000](http://localhost:3000) in your browser
+### Environment Setup
 
-## Project Structure
+Create `.env.local` with:
 
-```
-app/
-├── layout.tsx      # Root layout with SessionProvider wrapper
-├── page.tsx        # Main ordering page with menu and cart
-└── globals.css     # Global styles and Tailwind imports
-lib/
-├── session.ts      # Session management helper (localStorage)
-├── SessionContext.tsx  # React Context for session access
-├── customerIdentity.ts # Customer name/phone storage (localStorage)
-├── cartUtils.ts    # Cart calculation and validation utilities
-├── orderUtils.ts   # Order preparation utilities
-├── orderSubmission.ts # Order submission to database
-└── supabase.ts     # Supabase client configuration
-types/
-└── cart.ts         # TypeScript types for cart functionality
-components/
-└── SessionExample.tsx  # Example usage of useSession hook
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Authentication Passwords (Change these!)
+NEXT_PUBLIC_KITCHEN_PASSWORD=YourKitchenPassword123
+NEXT_PUBLIC_ADMIN_PASSWORD=YourAdminPassword123
 ```
 
-## Session Management
+## 📁 Project Structure
 
-The app includes a simple React Context-based session system that makes `session_id` available to all client components:
-
-**Files:**
-- `lib/session.ts` - Low-level localStorage helper
-- `lib/SessionContext.tsx` - React Context Provider & hook
-- `lib/customerIdentity.ts` - Customer name/phone localStorage helper
-
-**Setup (already done):**
-```typescript
-// app/layout.tsx wraps the app with SessionProvider
-<SessionProvider>
-  {children}
-</SessionProvider>
+```
+badshahs-kitchen/
+├── app/                      # Next.js App Router
+│   ├── page.tsx             # Customer ordering page
+│   ├── orders/              # Order tracking
+│   ├── bill/[orderId]/      # Receipt & feedback
+│   ├── kitchen/             # Kitchen dashboard
+│   └── admin/               # Admin panel
+├── components/              # React components
+│   └── CustomerIdentityForm.tsx
+├── lib/                     # Utilities & helpers
+│   ├── supabase.ts         # Supabase client
+│   ├── SessionContext.tsx   # Session management
+│   ├── kitchenAuth.tsx     # Kitchen authentication
+│   ├── adminAuth.tsx       # Admin authentication
+│   ├── cartUtils.ts        # Cart calculations
+│   ├── orderUtils.ts       # Order processing
+│   └── dateUtils.ts        # Date formatting (Indian timezone)
+├── types/                   # TypeScript type definitions
+├── docs/                    # Documentation
+│   ├── database-schema.md   # Database structure
+│   ├── add-price-and-feedback.sql  # Main migration
+│   └── add-performance-indexes.sql # Performance optimization
+├── DEPLOYMENT-GUIDE.md      # Step-by-step deployment
+└── MULTI-USER-LOAD-ANALYSIS.md  # Performance analysis
 ```
 
-### Usage in Any Component
+## 🗃️ Database Setup
 
-```typescript
-import { useSession } from "@/lib/SessionContext";
+### 1. Create Tables
 
-function MyComponent() {
-  const { sessionId, isLoading, clearSession } = useSession();
-  
-  // Use sessionId anywhere!
-  console.log("Current session:", sessionId);
-  
-  return <div>Session: {sessionId}</div>;
-}
+Run the migrations in your Supabase SQL Editor:
+
+```bash
+# Required migration (creates tables & RLS policies)
+docs/add-price-and-feedback.sql
+
+# Optional performance boost
+docs/add-performance-indexes.sql
 ```
 
-### API
+### 2. Enable Realtime
 
-**useSession() hook returns:**
-- `sessionId` (string) - Current session UUID
-- `isLoading` (boolean) - True during initial load
-- `clearSession()` (function) - Clears and regenerates session
+In Supabase Dashboard:
+1. Go to **Database** → **Replication**
+2. Enable for tables:
+   - ✅ `orders`
+   - ✅ `menu_items`
 
-**Direct functions (if needed):**
+### 3. Insert Sample Menu (Optional)
 
-**Direct functions (if needed):**
-- `getSessionId()` - Get or create session_id from localStorage
-- `getExistingSessionId()` - Get session_id only if exists (returns null if not found)
-- `clearSession()` - Remove current session from localStorage (low-level)
-
-### Customer Identity
-
-Store customer name and phone for convenience (no authentication):
-
-```typescript
-import { 
-  getCustomerIdentity, 
-  setCustomerIdentity, 
-  hasCustomerIdentity,
-  clearCustomerIdentity 
-} from "@/lib/customerIdentity";
-
-// Check if stored
-if (hasCustomerIdentity()) {
-  const identity = getCustomerIdentity();
-  console.log(identity?.name, identity?.phone);
-}
-
-// Save identity
-setCustomerIdentity("John Doe", "555-0123");
-
-// Clear identity
-clearCustomerIdentity();
+```sql
+INSERT INTO menu_items (name, category, price, is_available, is_special) VALUES
+  ('Paneer Tikka', 'Starters', 25000, true, false),
+  ('Butter Chicken', 'Main Course', 35000, true, true),
+  ('Garlic Naan', 'Breads', 5000, true, false),
+  ('Gulab Jamun', 'Desserts', 8000, true, false);
 ```
 
-## Supabase Setup
+*Prices are in paise (₹250.00 = 25000)*
 
-The app uses Supabase for database operations (no authentication required).
+## 🎯 Usage
 
-**Client location:** `lib/supabase.ts`
+### Customer Flow
+1. Visit `/` - Browse menu
+2. Add items to cart
+3. Click "Place Order"
+4. Enter name and phone
+5. Track order at `/orders`
+6. View bill and give feedback
 
-**Usage:**
-```typescript
-import { supabase } from "@/lib/supabase";
+### Kitchen Flow
+1. Visit `/kitchen/login`
+2. Enter kitchen password
+3. View incoming orders
+4. Update status: **Placed** → **Accepted** → **Preparing** → **Ready** → **Completed**
 
-// Example (queries not implemented yet)
-const { data, error } = await supabase
-  .from('menu_items')
-  .select('*');
+### Admin Flow
+1. Visit `/admin/login`
+2. Enter admin password
+3. **Menu Tab**: Add/edit/delete menu items
+4. **Stats Tab**: View daily metrics, click sections for details
+
+## 🔐 Security
+
+- **Customer Pages**: No authentication (session-based)
+- **Kitchen Dashboard**: Password-protected
+- **Admin Panel**: Password-protected
+- **Database**: Row-Level Security (RLS) policies enabled
+- **API**: Supabase Auth with anon key (read-only for customers)
+
+## 🚀 Deployment
+
+### Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
+1. Import your GitHub repository
+2. Add environment variables in Vercel Dashboard
+3. Deploy!
+
+**See [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md) for detailed instructions**
+
+### Environment Variables for Production
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_KITCHEN_PASSWORD=strong_password_here
+NEXT_PUBLIC_ADMIN_PASSWORD=another_strong_password
 ```
 
-**Configuration:**
-- Environment variables in `.env.local`
-- Client is configured without auth persistence
-- Uses anonymous key with Row Level Security (RLS)
+⚠️ **Change default passwords before going live!**
 
-**Planned usage:**
-- Fetching menu items from database
-- Inserting customer orders
+## 📊 Performance
 
-## Scripts
+Expected capacity (see [MULTI-USER-LOAD-ANALYSIS.md](MULTI-USER-LOAD-ANALYSIS.md)):
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
+| Concurrent Users | Response Time | Status |
+|-----------------|---------------|---------|
+| 1-50 | < 200ms | 🟢 Excellent |
+| 50-100 | < 500ms | 🟢 Very Good |
+| 100-500 | < 1s | 🟡 Good |
+| 500+ | Upgrade needed | 🔴 Requires paid plans |
 
-## Design Philosophy
+## 🎨 Theme
 
-- **Simple & Clean**: No authentication required
-- **Mobile-First**: Designed for touch interfaces
-- **Fast**: Optimized for quick ordering experience
-- **Accessible**: Clear labels and intuitive navigation
+Custom cafe color palette:
+
+```css
+Stone Gray: #44403c (stone-700)
+Warm Amber: #b45309 (amber-700)
+Forest Green: #15803d (green-700)
+Natural Beige: #f5f5f4 (stone-50)
+```
+
+## 🧪 Testing
+
+```bash
+# Build production bundle
+npm run build
+
+# Run production server
+npm start
+
+# Lint code
+npm run lint
+```
+
+## 📚 Documentation
+
+- **[DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)** - Complete deployment walkthrough
+- **[MULTI-USER-LOAD-ANALYSIS.md](MULTI-USER-LOAD-ANALYSIS.md)** - Performance & scaling analysis
+- **[docs/database-schema.md](docs/database-schema.md)** - Detailed database documentation
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- Database by [Supabase](https://supabase.com/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- Icons from [Heroicons](https://heroicons.com/)
+
+---
+
+**Made with ❤️ for Badshah's Kitchen**
