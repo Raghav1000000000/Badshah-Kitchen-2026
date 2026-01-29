@@ -664,7 +664,7 @@ export default function AdminPage() {
         {activeTab === 'stats' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">Today's Statistics</h2>
+              <h2 className="text-xl font-bold text-gray-900">Today&apos;s Statistics</h2>
               <button
                 onClick={fetchDailyStats}
                 disabled={statsLoading}
@@ -839,7 +839,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                       {feedback.comment && (
-                        <p className="text-stone-700 italic bg-white p-3 rounded border border-stone-200 mt-2">"{feedback.comment}"</p>
+                        <p className="text-stone-700 italic bg-white p-3 rounded border border-stone-200 mt-2">&quot;{feedback.comment}&quot;</p>
                       )}
                     </div>
                   ))}
