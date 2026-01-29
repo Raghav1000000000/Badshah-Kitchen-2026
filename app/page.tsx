@@ -60,6 +60,7 @@ export default function Home() {
         if (error) throw error;
         
         setMenuItems(data || []);
+        console.log('✅ Menu items fetched:', data?.length);
       } catch (error) {
         console.error('Error fetching menu items:', error);
         setMenuError('Failed to load menu items. Please refresh the page.');
@@ -69,6 +70,36 @@ export default function Home() {
     }
     
     fetchMenuItems();
+
+    // Subscribe to menu_items changes for real-time updates
+    const channel = supabase
+      .channel('menu-items-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'menu_items',
+        },
+        (payload) => {
+          console.log('🔔 Realtime: Menu items changed!', payload.eventType, payload);
+          // Refetch menu items when any change happens
+          fetchMenuItems();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Successfully subscribed to menu_items changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Realtime subscription error - check if Realtime is enabled in Supabase');
+        }
+      });
+
+    return () => {
+      console.log('🔌 Unsubscribing from menu_items changes');
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Check customer identity after mount (client-side only to avoid hydration mismatch)

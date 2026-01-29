@@ -7,7 +7,8 @@ import { CartItem, OrderItemInsert } from "@/types/cart";
 
 /**
  * Convert cart items to order_items format for database insertion
- * Extracts menu_item_id, quantity, and price_at_time
+ * Stores menu item details (name, price) to preserve order history
+ * even if the menu item is later deleted
  * 
  * @param cart - Current cart items with full menu data
  * @param orderId - UUID of the created order
@@ -19,6 +20,8 @@ export function prepareOrderItems(cart: CartItem[], orderId: string): OrderItemI
     menu_item_id: item.id, // Extract UUID from menu item
     quantity: item.quantity,
     price_at_time: item.price, // Store price at time of order (in paise)
+    item_name: item.name, // Store item name for order history
+    item_price_at_order: item.price, // Store price for order history (in paise)
   }));
 }
 

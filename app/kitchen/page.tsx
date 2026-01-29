@@ -29,9 +29,7 @@ import { useKitchenAuth } from "@/lib/kitchenAuth";
 type OrderItem = {
   id: string;
   quantity: number;
-  menu_items: {
-    name: string;
-  };
+  item_name: string;  // Stored in order_items, preserved even if menu item is deleted
 };
 
 type Order = {
@@ -72,8 +70,8 @@ export default function KitchenPage() {
     setError(null);
 
     try {
-      // Fetch all orders including completed
-      // Sort by created_at descending (newest first)
+      // Fetch all orders with order_items
+      // item_name is stored directly in order_items (no need to join menu_items)
       const { data, error: fetchError } = await supabase
         .from('orders')
         .select(`
@@ -81,9 +79,7 @@ export default function KitchenPage() {
           order_items (
             id,
             quantity,
-            menu_items (
-              name
-            )
+            item_name
           )
         `)
         .order('created_at', { ascending: false });
@@ -478,7 +474,7 @@ export default function KitchenPage() {
                             <span className="w-6 h-6 rounded bg-gray-900 text-white font-bold text-xs flex items-center justify-center">
                               {item.quantity}
                             </span>
-                            <span className="text-gray-900">{item.menu_items.name}</span>
+                            <span className="text-gray-900">{item.item_name}</span>
                           </div>
                         ))}
                       </div>

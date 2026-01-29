@@ -9,13 +9,11 @@ import { getCustomerIdentity } from "@/lib/customerIdentity";
 
 type OrderItem = {
   id: string;
-  menu_item_id: string;
+  menu_item_id: string | null;  // Nullable if menu item was deleted
   quantity: number;
   price_at_time: number;
-  menu_items: {
-    name: string;
-    category: string;
-  };
+  item_name: string;  // Stored in order_items, preserved even if menu item deleted
+  item_price_at_order: number;  // Price at time of order
 };
 
 type Order = {
@@ -59,11 +57,12 @@ export default function OrdersPage() {
           .select(`
             *,
             order_items (
-              *,
-              menu_items (
-                name,
-                category
-              )
+              id,
+              menu_item_id,
+              quantity,
+              price_at_time,
+              item_name,
+              item_price_at_order
             )
           `)
           .eq('session_id', sessionId)
@@ -389,12 +388,9 @@ export default function OrdersPage() {
                                   </div>
                                   <div className="flex-1">
                                     <p className="font-semibold text-gray-900">
-                                      {item.menu_items.name}
+                                      {item.item_name}
                                     </p>
                                     <div className="flex items-center gap-2 mt-1">
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                                        {item.menu_items.category}
-                                      </span>
                                       <span className="text-xs text-gray-500">
                                         ₹{(item.price_at_time / 100).toFixed(2)} each
                                       </span>

@@ -44,6 +44,10 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<string[]>(['Starters', 'Main Course', 'Breads', 'Rice', 'Desserts', 'Beverages']);
   const [isNewCategory, setIsNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState('');
   
   // Stats state
   const [stats, setStats] = useState<DailyStats | null>(null);
@@ -128,6 +132,65 @@ export default function AdminPage() {
     }
   };
 
+  const handleRenameCategory = async (oldName: string, newName: string) => {
+    if (!newName.trim() || oldName === newName) {
+      setEditingCategory(null);
+      return;
+    }
+
+    if (categories.includes(newName)) {
+      alert('Category already exists!');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('menu_items')
+        .update({ category: newName })
+        .eq('category', oldName);
+
+      if (error) throw error;
+
+      alert(`Renamed "${oldName}" to "${newName}"`);
+      setEditingCategory(null);
+      setEditCategoryName('');
+      // Fetch both in parallel
+      await Promise.all([loadCategories(), fetchMenuItems()]);
+    } catch (error) {
+      console.error('Error renaming category:', error);
+      alert('Failed to rename category');
+    }
+  };
+
+  const handleDeleteCategory = async (categoryName: string) => {
+    const itemsInCategory = menuItems.filter(item => item.category === categoryName);
+    
+    if (itemsInCategory.length > 0) {
+      if (!confirm(
+        `"${categoryName}" has ${itemsInCategory.length} item(s).\n\n` +
+        `Delete all items in this category?`
+      )) return;
+
+      try {
+        const { error } = await supabase
+          .from('menu_items')
+          .delete()
+          .eq('category', categoryName);
+
+        if (error) throw error;
+
+        alert(`Deleted category "${categoryName}" and ${itemsInCategory.length} item(s)`);
+        // Fetch both in parallel
+        await Promise.all([loadCategories(), fetchMenuItems()]);
+      } catch (error) {
+        console.error('Error deleting category:', error);
+        alert('Failed to delete category');
+      }
+    } else {
+      alert(`Category "${categoryName}" has no items.`);
+    }
+  };
+
   const fetchDailyStats = async () => {
     setStatsLoading(true);
     try {
@@ -140,10 +203,8 @@ export default function AdminPage() {
           *,
           order_items (
             quantity,
-            menu_items (
-              name,
-              price
-            )
+            item_name,
+            item_price_at_order
           )
         `)
         .gte('created_at', `${today}T00:00:00`)
@@ -178,8 +239,8 @@ export default function AdminPage() {
       const itemCounts: Record<string, { count: number; revenue: number }> = {};
       orders?.forEach(order => {
         order.order_items?.forEach((item: any) => {
-          const name = item.menu_items?.name || 'Unknown';
-          const price = item.menu_items?.price || 0;
+          const name = item.item_name || 'Unknown';
+          const price = item.item_price_at_order || 0;
           if (!itemCounts[name]) {
             itemCounts[name] = { count: 0, revenue: 0 };
           }
@@ -351,7 +412,10 @@ export default function AdminPage() {
   };
 
   const handleDeleteItem = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    if (!confirm(
+      `Are you sure you want to delete "${name}"?\n\n` +
+      `This will remove it from the menu. Order history will be preserved.`
+    )) return;
 
     try {
       const { error } = await supabase
@@ -365,7 +429,7 @@ export default function AdminPage() {
       fetchMenuItems();
     } catch (error) {
       console.error('Error deleting item:', error);
-      alert('Failed to delete menu item');
+      alert('Failed to delete menu item. Please try again.');
     }
   };
 
@@ -379,6 +443,10 @@ export default function AdminPage() {
       is_special: item.is_special
     });
     setShowAddForm(false);
+    // Scroll to form
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const resetForm = () => {
@@ -468,20 +536,241 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {activeTab === 'menu' && (
           <div className="space-y-6">
-            {/* Add Button */}
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">Menu Items ({menuItems.length})</h2>
-              <button
-                onClick={() => {
-                  setShowAddForm(true);
-                  setEditingItem(null);
-                  resetForm();
-                }}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-              >
-                + Add Menu Item
-              </button>
+            {/* Action Buttons and Filter */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center flex-wrap gap-3">
+                <h2 className="text-xl font-bold text-gray-900">Menu Items ({menuItems.length})</h2>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowAddForm(true);
+                      setEditingItem(null);
+                      resetForm();
+                    }}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+                  >
+                    + Add Menu Item
+                  </button>
+                  <button
+                    onClick={() => setShowCategoryManager(!showCategoryManager)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    🏷️ Manage Categories
+                  </button>
+                </div>
+              </div>
+
+              {/* Category Filter */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-medium text-gray-700">Filter by:</span>
+                <button
+                  onClick={() => setSelectedCategoryFilter(null)}
+                  className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                    selectedCategoryFilter === null
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  All ({menuItems.length})
+                </button>
+                {categories.map(category => {
+                  const count = menuItems.filter(item => item.category === category).length;
+                  if (count === 0) return null;
+                  return (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategoryFilter(category)}
+                      className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                        selectedCategoryFilter === category
+                          ? 'bg-orange-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {category} ({count})
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Category Manager Modal */}
+            {showCategoryManager && (
+              <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-gray-900">Manage Categories</h3>
+                  <button
+                    onClick={() => {
+                      setShowCategoryManager(false);
+                      setEditingCategory(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {categories.map(category => {
+                    const itemCount = menuItems.filter(item => item.category === category).length;
+                    return (
+                      <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        {editingCategory === category ? (
+                          <input
+                            type="text"
+                            value={editCategoryName}
+                            onChange={(e) => setEditCategoryName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleRenameCategory(category, editCategoryName);
+                              } else if (e.key === 'Escape') {
+                                setEditingCategory(null);
+                                setEditCategoryName('');
+                              }
+                            }}
+                            className="flex-1 px-3 py-1 border border-orange-500 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            autoFocus
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{category}</span>
+                            <span className="text-sm text-gray-500">({itemCount} items)</span>
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          {editingCategory === category ? (
+                            <>
+                              <button
+                                onClick={() => handleRenameCategory(category, editCategoryName)}
+                                className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                              >
+                                ✓ Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingCategory(null);
+                                  setEditCategoryName('');
+                                }}
+                                className="px-3 py-1 text-sm bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingCategory(category);
+                                  setEditCategoryName(category);
+                                }}
+                                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                              >
+                                Rename
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategory(category)}
+                                className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                                disabled={itemCount === 0}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Category Manager Modal */}
+            {showCategoryManager && (
+              <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-gray-900">Manage Categories</h3>
+                  <button
+                    onClick={() => {
+                      setShowCategoryManager(false);
+                      setEditingCategory(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 text-xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {categories.map(category => {
+                    const itemCount = menuItems.filter(item => item.category === category).length;
+                    return (
+                      <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        {editingCategory === category ? (
+                          <input
+                            type="text"
+                            value={editCategoryName}
+                            onChange={(e) => setEditCategoryName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleRenameCategory(category, editCategoryName);
+                              } else if (e.key === 'Escape') {
+                                setEditingCategory(null);
+                                setEditCategoryName('');
+                              }
+                            }}
+                            className="flex-1 px-3 py-1 border border-orange-500 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            autoFocus
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{category}</span>
+                            <span className="text-sm text-gray-500">({itemCount} items)</span>
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          {editingCategory === category ? (
+                            <>
+                              <button
+                                onClick={() => handleRenameCategory(category, editCategoryName)}
+                                className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                              >
+                                ✓ Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingCategory(null);
+                                  setEditCategoryName('');
+                                }}
+                                className="px-3 py-1 text-sm bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingCategory(category);
+                                  setEditCategoryName(category);
+                                }}
+                                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                              >
+                                Rename
+                              </button>
+                              {itemCount > 0 && (
+                                <button
+                                  onClick={() => handleDeleteCategory(category)}
+                                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                                >
+                                  Delete ({itemCount})
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Add/Edit Form */}
             {(showAddForm || editingItem) && (
@@ -587,9 +876,9 @@ export default function AdminPage() {
                   <div className="flex gap-3">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold"
                     >
-                      {editingItem ? 'Update Item' : 'Add Item'}
+                      {editingItem ? '✓ Update Item' : '+ Add Item'}
                     </button>
                     <button
                       type="button"
@@ -598,9 +887,9 @@ export default function AdminPage() {
                         setEditingItem(null);
                         resetForm();
                       }}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
                     >
-                      Cancel
+                      ✕ Cancel
                     </button>
                   </div>
                 </form>
@@ -614,7 +903,9 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {menuItems.map((item) => (
+                {menuItems
+                  .filter(item => selectedCategoryFilter === null || item.category === selectedCategoryFilter)
+                  .map((item) => (
                   <div
                     key={item.id}
                     className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-md transition-shadow"

@@ -23,11 +23,13 @@ export type CartItem = MenuItem & {
 
 /**
  * Structure for inserting into order_items table
- * Extracted from CartItem when placing an order
+ * Stores menu item details to preserve order history even if menu item is deleted
  */
 export type OrderItemInsert = {
   order_id: string; // Set when creating the order
-  menu_item_id: string; // From CartItem.id
+  menu_item_id: string; // From CartItem.id (reference to menu_items)
   quantity: number; // From CartItem.quantity
   price_at_time: number; // Price in paise at time of order (preserves historical pricing)
+  item_name: string; // Menu item name at order time (preserved even if item deleted)
+  item_price_at_order: number; // Price in paise (same as price_at_time, for order history)
 };
