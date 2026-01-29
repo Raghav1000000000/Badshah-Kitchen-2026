@@ -245,22 +245,28 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <header className="bg-stone-700 shadow-lg sticky top-0 z-10 border-b-2 border-amber-700">
+        <div className="max-w-7xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Badshah&apos;s Kitchen</h1>
-              <p className="text-sm text-gray-600">Order your favorites</p>
+            <div className="animate-fade-in">
+              <h1 className="text-2xl font-bold text-amber-50">Badshah&apos;s Kitchen</h1>
+              {hasIdentity && getCustomerIdentity() ? (
+                <p className="text-sm text-stone-300 mt-1 animate-slide-in">
+                  Hi, {getCustomerIdentity()?.name?.split(' ')[0] || 'Guest'} 👋
+                </p>
+              ) : (
+                <p className="text-sm text-stone-300 mt-1">Order your favorites</p>
+              )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link
                 href="/orders"
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-2 text-amber-50 hover:bg-stone-600 px-3 py-2 rounded-lg transition-all duration-200 transform hover:scale-105"
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -272,15 +278,15 @@ export default function Home() {
                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                   />
                 </svg>
-                <span className="text-sm font-medium">Orders</span>
+                <span className="text-sm font-medium hidden sm:inline">Orders</span>
               </Link>
               {hasIdentity && (
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 text-gray-600 hover:text-red-600"
+                  className="flex items-center gap-2 text-amber-50 hover:bg-stone-600 px-3 py-2 rounded-lg transition-all duration-200 transform hover:scale-105"
                 >
                   <svg
-                    className="w-6 h-6"
+                    className="w-5 h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -292,7 +298,7 @@ export default function Home() {
                       d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                     />
                   </svg>
-                  <span className="text-sm font-medium">Logout</span>
+                  <span className="text-sm font-medium hidden sm:inline">Logout</span>
                 </button>
               )}
             </div>
@@ -301,17 +307,17 @@ export default function Home() {
       </header>
 
       {/* Category Filter */}
-      <div className="bg-white border-b sticky top-[72px] z-10">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className="bg-stone-100 border-b-2 border-stone-300 sticky top-[85px] z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map(category => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
                   selectedCategory === category
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-amber-700 text-amber-50 shadow-md"
+                    : "bg-white text-stone-700 hover:bg-stone-200 shadow-sm border border-stone-300"
                 }`}
               >
                 {category}
@@ -322,7 +328,7 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 pb-32">
+      <main className="max-w-7xl mx-auto px-4 py-6 pb-80">
         {/* Loading State */}
         {isLoadingMenu && (
           <div className="text-center py-12">
@@ -347,31 +353,32 @@ export default function Home() {
 
         {/* Menu Items Grid */}
         {!isLoadingMenu && !menuError && filteredItems.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredItems.map(item => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredItems.map((item, index) => (
               <div
                 key={item.id}
-                className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl shadow-md p-5 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-stone-200 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="flex justify-between items-start mb-2">
+                <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-bold text-stone-800 text-lg">
                       {item.name}
                       {item.is_special && (
-                        <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                          Special
+                        <span className="ml-2 inline-flex items-center text-xs bg-amber-600 text-amber-50 px-2.5 py-1 rounded-full font-semibold">
+                          ⭐ Special
                         </span>
                       )}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">{item.category}</p>
+                    <p className="text-sm text-stone-500 mt-1.5 font-medium">{item.category}</p>
                   </div>
-                  <span className="text-lg font-bold text-gray-900 ml-2">
-                    ₹{(item.price / 100).toFixed(2)}
+                  <span className="text-xl font-bold text-amber-700 ml-2">
+                    ₹{(item.price / 100).toFixed(0)}
                   </span>
                 </div>
                 <button
                   onClick={() => addToCart(item)}
-                  className="w-full mt-3 bg-gray-900 text-white py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                  className="w-full mt-4 bg-amber-700 text-amber-50 py-2.5 rounded-lg font-semibold hover:bg-amber-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                 >
                   Add to Cart
                 </button>
@@ -383,40 +390,40 @@ export default function Home() {
 
       {/* Cart Footer */}
       {cart.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-stone-50 border-t-2 border-amber-700 shadow-2xl animate-slide-up">
           <div className="max-w-7xl mx-auto px-4 py-4">
             {/* Cart Items */}
             <div className="mb-4 max-h-48 overflow-y-auto">
               {cart.map(item => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between py-2 border-b last:border-b-0"
+                  className="flex items-center justify-between py-3 border-b border-stone-200 last:border-b-0 animate-fade-in"
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-sm text-gray-600">
-                      ₹{(item.price / 100).toFixed(2)} each
+                    <p className="font-semibold text-stone-800">{item.name}</p>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      ₹{(item.price / 100).toFixed(0)} each
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => removeFromCart(item.id)}
-                      className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700"
+                      className="w-8 h-8 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center font-bold text-stone-700 transition-all duration-200 transform hover:scale-110"
                     >
                       −
                     </button>
-                    <span className="font-semibold text-gray-900 w-6 text-center">
+                    <span className="font-bold text-stone-800 w-8 text-center">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => addToCart(item)}
-                      className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700"
+                      className="w-8 h-8 rounded-full bg-green-700 hover:bg-green-800 flex items-center justify-center font-bold text-green-50 transition-all duration-200 transform hover:scale-110"
                     >
                       +
                     </button>
                   </div>
-                  <div className="ml-4 font-semibold text-gray-900 min-w-[60px] text-right">
-                    ₹{((item.price / 100) * item.quantity).toFixed(2)}
+                  <div className="ml-4 font-bold text-amber-700 min-w-[60px] text-right">
+                    ₹{((item.price / 100) * item.quantity).toFixed(0)}
                   </div>
                 </div>
               ))}
@@ -425,19 +432,29 @@ export default function Home() {
             {/* Place Order Section */}
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs text-stone-500 uppercase tracking-wide">
                   {calculateCartItemCount(cart)} {calculateCartItemCount(cart) === 1 ? "item" : "items"}
                 </p>
-                <p className="text-xl font-bold text-gray-900">
-                  ₹{calculateCartTotal(cart).toFixed(2)}
+                <p className="text-2xl font-bold text-amber-700">
+                  ₹{calculateCartTotal(cart).toFixed(0)}
                 </p>
               </div>
               <button
                 onClick={handlePlaceOrder}
                 disabled={isSubmittingOrder}
-                className="flex-1 max-w-xs py-3 rounded-lg font-semibold transition-colors bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="flex-1 max-w-xs py-3.5 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 bg-amber-700 text-amber-50 hover:bg-amber-800 disabled:bg-stone-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
               >
-                {isSubmittingOrder ? "Placing Order..." : "Place Order"}
+                {isSubmittingOrder ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Placing Order...
+                  </span>
+                ) : (
+                  "Place Order 🚀"
+                )}
               </button>
             </div>
           </div>

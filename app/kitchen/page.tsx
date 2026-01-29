@@ -72,7 +72,7 @@ export default function KitchenPage() {
     setError(null);
 
     try {
-      // Fetch orders that are NOT completed
+      // Fetch all orders including completed
       // Sort by created_at descending (newest first)
       const { data, error: fetchError } = await supabase
         .from('orders')
@@ -86,7 +86,6 @@ export default function KitchenPage() {
             )
           )
         `)
-        .neq('status', 'COMPLETED')
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -314,7 +313,7 @@ export default function KitchenPage() {
           <div className="flex gap-2 overflow-x-auto">
             <button
               onClick={() => setFilterStatus("all")}
-              className={`px-3 py-1.5 rounded text-sm font-medium ${
+              className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
                 filterStatus === "all"
                   ? "bg-gray-900 text-white"
                   : "bg-gray-200 text-gray-700"
@@ -324,19 +323,29 @@ export default function KitchenPage() {
             </button>
             <button
               onClick={() => setFilterStatus("placed")}
-              className={`px-3 py-1.5 rounded text-sm font-medium ${
+              className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
                 filterStatus === "placed"
-                  ? "bg-gray-900 text-white"
+                  ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-700"
               }`}
             >
-              New
+              Placed
+            </button>
+            <button
+              onClick={() => setFilterStatus("accepted")}
+              className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
+                filterStatus === "accepted"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              Accepted
             </button>
             <button
               onClick={() => setFilterStatus("preparing")}
-              className={`px-3 py-1.5 rounded text-sm font-medium ${
+              className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
                 filterStatus === "preparing"
-                  ? "bg-gray-900 text-white"
+                  ? "bg-yellow-600 text-white"
                   : "bg-gray-200 text-gray-700"
               }`}
             >
@@ -344,13 +353,23 @@ export default function KitchenPage() {
             </button>
             <button
               onClick={() => setFilterStatus("ready")}
-              className={`px-3 py-1.5 rounded text-sm font-medium ${
+              className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
                 filterStatus === "ready"
-                  ? "bg-gray-900 text-white"
+                  ? "bg-green-600 text-white"
                   : "bg-gray-200 text-gray-700"
               }`}
             >
               Ready
+            </button>
+            <button
+              onClick={() => setFilterStatus("completed")}
+              className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap ${
+                filterStatus === "completed"
+                  ? "bg-gray-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              Completed
             </button>
           </div>
         </div>

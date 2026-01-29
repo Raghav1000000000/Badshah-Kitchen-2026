@@ -160,17 +160,17 @@ export default function BillPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-stone-100 pb-20">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 py-4">
+      <header className="bg-stone-700 shadow-lg border-b-2 border-amber-700">
+        <div className="max-w-3xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-amber-50">
               Badshah&apos;s Kitchen
             </h1>
             <Link
               href="/"
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm text-amber-200 hover:text-amber-50 font-medium transition-colors"
             >
               Back to Menu
             </Link>
@@ -180,11 +180,11 @@ export default function BillPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Order Confirmation */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-6 border-2 border-stone-200">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4 animate-fade-in">
               <svg
-                className="w-8 h-8 text-green-600"
+                className="w-10 h-10 text-green-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -192,66 +192,90 @@ export default function BillPage() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M5 13l4 4L19 7"
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-3xl font-bold text-stone-800 mb-3">
               Order Confirmed!
             </h2>
-            <p className="text-gray-600">
-              Thank you for your order, {order.customer_name}
+            <p className="text-stone-600 text-lg">
+              Thank you, <span className="font-semibold text-amber-700">{order.customer_name}</span> 🙏
             </p>
           </div>
 
           {/* Order Details */}
-          <div className="border-t border-b border-gray-200 py-4 mb-4">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600">Order Number</span>
-              <span className="font-semibold text-gray-900">
-                #{order.order_number}
-              </span>
+          <div className="bg-stone-50 rounded-lg p-6 mb-6 border border-stone-200">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-stone-500 mb-1">Order Number</p>
+                <p className="text-2xl font-bold text-amber-700">
+                  #{order.order_number}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-stone-500 mb-1">Status</p>
+                <p className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                  {order.status}
+                </p>
+              </div>
             </div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600">Order ID</span>
-              <span className="font-mono text-xs text-gray-700">
-                {order.id}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600">Status</span>
-              <span className="capitalize font-medium text-blue-600">
-                {order.status}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Time</span>
-              <span className="text-gray-700">
-                {new Date(order.created_at).toLocaleString()}
-              </span>
+            
+            <div className="mt-4 pt-4 border-t border-stone-200 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-stone-500 mb-1">Date</p>
+                <p className="text-sm font-semibold text-stone-700 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {new Date(order.created_at).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-stone-500 mb-1">Time</p>
+                <p className="text-sm font-semibold text-stone-700 flex items-center justify-end gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {new Date(order.created_at).toLocaleTimeString('en-IN', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  })}
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Order Items */}
-          <div className="mb-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
-            <div className="space-y-2">
+          <div className="mb-6">
+            <h3 className="font-bold text-stone-800 mb-4 text-lg flex items-center gap-2">
+              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              Order Items
+            </h3>
+            <div className="space-y-3">
               {order.order_items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex justify-between items-start"
+                  className="flex justify-between items-start p-3 bg-stone-50 rounded-lg border border-stone-200"
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-semibold text-stone-800">
                       {item.menu_items.name}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      ₹{(item.price_at_time / 100).toFixed(2)} × {item.quantity}
+                    <p className="text-sm text-stone-500 mt-1">
+                      ₹{(item.price_at_time / 100).toFixed(0)} × {item.quantity}
                     </p>
                   </div>
-                  <p className="font-semibold text-gray-900">
-                    ₹{((item.price_at_time / 100) * item.quantity).toFixed(2)}
+                  <p className="font-bold text-amber-700 text-lg">
+                    ₹{((item.price_at_time / 100) * item.quantity).toFixed(0)}
                   </p>
                 </div>
               ))}
@@ -259,11 +283,11 @@ export default function BillPage() {
           </div>
 
           {/* Total */}
-          <div className="border-t border-gray-200 pt-4">
+          <div className="bg-amber-50 rounded-lg p-5 border-2 border-amber-200">
             <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-900">Total</span>
-              <span className="text-2xl font-bold text-gray-900">
-                ₹{(order.total_amount / 100).toFixed(2)}
+              <span className="text-lg font-bold text-stone-700">Total Amount</span>
+              <span className="text-3xl font-bold text-amber-700">
+                ₹{(order.total_amount / 100).toFixed(0)}
               </span>
             </div>
           </div>
@@ -271,29 +295,30 @@ export default function BillPage() {
 
         {/* Feedback Form */}
         {!feedbackSubmitted && !order.feedback_given ? (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-stone-200">
+            <h3 className="text-2xl font-bold text-stone-800 mb-2">
               How was your experience?
             </h3>
+            <p className="text-stone-500 mb-6">We&apos;d love to hear your feedback! ☕</p>
             <form onSubmit={handleFeedbackSubmit}>
               {/* Rating */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rating
+                <label className="block text-sm font-semibold text-stone-700 mb-3">
+                  Rate your experience
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-3 justify-center">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       type="button"
                       onClick={() => setRating(star)}
-                      className="focus:outline-none transition-transform hover:scale-110"
+                      className="focus:outline-none transition-transform hover:scale-125 active:scale-110"
                     >
                       <svg
-                        className={`w-10 h-10 ${
+                        className={`w-12 h-12 ${
                           star <= rating
-                            ? "text-yellow-400 fill-current"
-                            : "text-gray-300"
+                            ? "text-amber-500 fill-current drop-shadow-md"
+                            : "text-stone-300"
                         }`}
                         stroke="currentColor"
                         fill={star <= rating ? "currentColor" : "none"}
@@ -310,12 +335,12 @@ export default function BillPage() {
                   ))}
                 </div>
                 {rating > 0 && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    {rating === 1 && "Poor"}
-                    {rating === 2 && "Fair"}
-                    {rating === 3 && "Good"}
-                    {rating === 4 && "Very Good"}
-                    {rating === 5 && "Excellent"}
+                  <p className="text-center text-base font-semibold text-amber-700 mt-3">
+                    {rating === 1 && "😞 Poor"}
+                    {rating === 2 && "😐 Fair"}
+                    {rating === 3 && "🙂 Good"}
+                    {rating === 4 && "😊 Very Good"}
+                    {rating === 5 && "🤩 Excellent!"}
                   </p>
                 )}
               </div>
@@ -324,17 +349,17 @@ export default function BillPage() {
               <div className="mb-6">
                 <label
                   htmlFor="comment"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-stone-700 mb-2"
                 >
-                  Comments (Optional)
+                  Share your thoughts (Optional)
                 </label>
                 <textarea
                   id="comment"
                   rows={4}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Tell us about your experience..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  placeholder="Tell us what you loved or how we can improve..."
+                  className="w-full px-4 py-3 border-2 border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
                 />
               </div>
 
@@ -342,17 +367,17 @@ export default function BillPage() {
               <button
                 type="submit"
                 disabled={isSubmittingFeedback || rating === 0}
-                className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-4 bg-amber-700 text-amber-50 rounded-xl font-bold text-lg hover:bg-amber-800 disabled:bg-stone-300 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
               >
-                {isSubmittingFeedback ? "Submitting..." : "Submit Feedback"}
+                {isSubmittingFeedback ? "Submitting..." : "Submit Feedback ✨"}
               </button>
             </form>
           </div>
         ) : (
-          <div className="bg-green-50 rounded-lg p-6 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
+          <div className="bg-green-50 rounded-xl p-8 text-center border-2 border-green-200 shadow-lg">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
               <svg
-                className="w-6 h-6 text-green-600"
+                className="w-8 h-8 text-green-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -365,26 +390,29 @@ export default function BillPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-2xl font-bold text-stone-800 mb-2">
               Thank you for your feedback!
             </h3>
-            <p className="text-gray-600 mb-4">
-              We appreciate you taking the time to share your experience.
+            <p className="text-stone-600 mb-6">
+              We appreciate you taking the time to share your experience. 🙏
             </p>
             <Link
               href="/"
-              className="inline-block px-6 py-2 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+              className="inline-block px-8 py-3 bg-amber-700 text-amber-50 rounded-xl font-bold hover:bg-amber-800 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              Order Again
+              Order Again 🍴
             </Link>
           </div>
         )}
 
         {/* Contact Info */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Questions about your order?</p>
-          <p className="font-medium text-gray-900">
-            Contact us: {order.customer_phone}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-stone-500 mb-2">Questions about your order?</p>
+          <p className="font-semibold text-stone-700 flex items-center justify-center gap-2">
+            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            {order.customer_phone}
           </p>
         </div>
       </div>

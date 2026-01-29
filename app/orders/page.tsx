@@ -5,6 +5,7 @@ import { useSession } from "@/lib/SessionContext";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { formatDate, formatTime } from "@/lib/dateUtils";
+import { getCustomerIdentity } from "@/lib/customerIdentity";
 
 type OrderItem = {
   id: string;
@@ -166,18 +167,18 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-stone-100">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <header className="bg-stone-700 shadow-lg sticky top-0 z-10 border-b-2 border-amber-700">
+        <div className="max-w-7xl mx-auto px-4 py-5">
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="text-gray-600 hover:text-gray-900"
+              className="p-2 hover:bg-stone-600 rounded-lg transition-all duration-200 transform hover:scale-110"
               aria-label="Back to menu"
             >
               <svg
-                className="w-6 h-6"
+                className="w-6 h-6 text-amber-50"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -190,9 +191,15 @@ export default function OrdersPage() {
                 />
               </svg>
             </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
-              <p className="text-sm text-gray-600">View your order history</p>
+            <div className="animate-fade-in">
+              <h1 className="text-2xl font-bold text-amber-50">My Orders</h1>
+              {getCustomerIdentity() ? (
+                <p className="text-sm text-stone-300 mt-1 animate-slide-in">
+                  Hi, {getCustomerIdentity()?.name?.split(' ')[0] || 'Guest'} 👋
+                </p>
+              ) : (
+                <p className="text-sm text-stone-300 mt-1">View your order history</p>
+              )}
             </div>
           </div>
         </div>
@@ -217,10 +224,10 @@ export default function OrdersPage() {
 
         {/* Empty State */}
         {!isLoading && !error && orders.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+          <div className="text-center py-16 animate-fade-in">
+            <div className="text-gray-300 mb-6">
               <svg
-                className="w-16 h-16 mx-auto"
+                className="w-20 h-20 mx-auto"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -228,17 +235,18 @@ export default function OrdersPage() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                 />
               </svg>
             </div>
-            <p className="text-gray-600 mb-4">No orders yet</p>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">No orders yet</h3>
+            <p className="text-gray-500 mb-6">Start ordering your favorite dishes!</p>
             <Link
               href="/"
-              className="inline-block bg-gray-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              className="inline-block bg-amber-700 text-amber-50 px-8 py-3 rounded-xl font-semibold hover:bg-amber-800 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              Browse Menu
+              Browse Menu 👨‍🍳
             </Link>
           </div>
         )}
@@ -255,21 +263,22 @@ export default function OrdersPage() {
               </p>
             </div>
 
-            {orders.map((order) => (
+            {orders.map((order, index) => (
               <div
                 key={order.id}
-                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-stone-200 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Order Header */}
-                <div className="p-4 border-b border-gray-100">
+                <div className="p-5 bg-stone-50 border-b-2 border-stone-200">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold text-gray-900">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <h3 className="text-xl font-bold text-amber-700">
                           Order #{order.order_number}
                         </h3>
                         <span
-                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${getStatusColor(
                             order.status
                           )}`}
                         >
@@ -277,22 +286,22 @@ export default function OrdersPage() {
                           {order.status}
                         </span>
                         {order.feedback_given && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-700 text-green-50 shadow-sm">
                             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                             </svg>
-                            Feedback Given
+                            ⭐ Reviewed
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span className="flex items-center gap-1">
+                      <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
+                        <span className="flex items-center gap-1.5 font-medium">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                           {formatDate(order.created_at)}
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1.5 font-medium">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
@@ -301,10 +310,10 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-900">
-                        ₹{(order.total_amount / 100).toFixed(2)}
+                      <p className="text-3xl font-bold text-amber-700">
+                        ₹{(order.total_amount / 100).toFixed(0)}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1 font-medium">
                         {order.order_items?.length || 0} {order.order_items?.length === 1 ? 'item' : 'items'}
                       </p>
                     </div>
@@ -312,21 +321,21 @@ export default function OrdersPage() {
 
                   {/* Customer Info */}
                   {(order.customer_name || order.customer_phone) && (
-                    <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-4 pt-3 border-t border-stone-300 flex-wrap">
                       {order.customer_name && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="flex items-center gap-2 text-sm text-stone-700">
+                          <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
-                          <span className="font-medium">{order.customer_name}</span>
+                          <span className="font-semibold">{order.customer_name}</span>
                         </div>
                       )}
                       {order.customer_phone && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="flex items-center gap-2 text-sm text-stone-700">
+                          <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
-                          <span>{order.customer_phone}</span>
+                          <span className="font-medium">{order.customer_phone}</span>
                         </div>
                       )}
                     </div>

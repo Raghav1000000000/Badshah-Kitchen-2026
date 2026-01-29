@@ -48,6 +48,14 @@ export default function AdminPage() {
   // Stats state
   const [stats, setStats] = useState<DailyStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  
+  // Modal state for details
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showOrdersModal, setShowOrdersModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [feedbackDetails, setFeedbackDetails] = useState<any[]>([]);
+  const [orderDetails, setOrderDetails] = useState<any[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -214,6 +222,76 @@ export default function AdminPage() {
       alert('Failed to load stats');
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  const fetchFeedbackDetails = async () => {
+    setLoadingDetails(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('id')
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`);
+      
+      const todayOrderIds = orders?.map(o => o.id) || [];
+      
+      if (todayOrderIds.length > 0) {
+        const { data, error } = await supabase
+          .from('feedback')
+          .select(`
+            *,
+            orders (
+              order_number,
+              customer_name
+            )
+          `)
+          .in('order_id', todayOrderIds);
+        
+        if (error) throw error;
+        setFeedbackDetails(data || []);
+      } else {
+        setFeedbackDetails([]);
+      }
+      setShowFeedbackModal(true);
+    } catch (error) {
+      console.error('Error fetching feedback details:', error);
+      alert('Failed to load feedback details');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const fetchOrdersByStatus = async (status: string) => {
+    setLoadingDetails(true);
+    setSelectedStatus(status);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            quantity,
+            menu_items (
+              name
+            )
+          )
+        `)
+        .eq('status', status)
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setOrderDetails(data || []);
+      setShowOrdersModal(true);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      alert('Failed to load order details');
+    } finally {
+      setLoadingDetails(false);
     }
   };
 
@@ -624,8 +702,14 @@ export default function AdminPage() {
 
                 {/* Customer Feedback */}
                 {stats.feedbackStats && (
-                  <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Feedback</h3>
+                  <div 
+                    onClick={() => fetchFeedbackDetails()}
+                    className="bg-white rounded-lg shadow p-6 border border-gray-200 cursor-pointer hover:shadow-lg transition-shadow"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                      Customer Feedback
+                      <span className="text-xs text-gray-500 font-normal">(Click to view details)</span>
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <div className="flex items-center justify-between mb-4">
@@ -669,13 +753,20 @@ export default function AdminPage() {
 
                 {/* Orders by Status */}
                 <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Status</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                    Order Status
+                    <span className="text-xs text-gray-500 font-normal">(Click status to view details)</span>
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
                     {Object.entries(stats.ordersByStatus).map(([status, count]) => (
-                      <div key={status} className="text-center">
+                      <button
+                        key={status}
+                        onClick={() => fetchOrdersByStatus(status)}
+                        className="text-center p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200"
+                      >
                         <p className="text-2xl font-bold text-gray-900">{count}</p>
                         <p className="text-sm text-gray-600">{status}</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -711,6 +802,104 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+      
+      {/* Feedback Details Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setShowFeedbackModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-amber-700 text-white p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Feedback Details</h2>
+              <button onClick={() => setShowFeedbackModal(false)} className="text-white hover:text-gray-200">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-88px)]">
+              {loadingDetails ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+                </div>
+              ) : feedbackDetails.length > 0 ? (
+                <div className="space-y-4">
+                  {feedbackDetails.map((feedback) => (
+                    <div key={feedback.id} className="border border-stone-200 rounded-lg p-4 bg-stone-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold text-stone-800">Order #{feedback.orders?.order_number}</span>
+                          <span className="text-sm text-stone-600">{feedback.orders?.customer_name}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <svg key={i} className={`w-5 h-5 ${i < feedback.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} viewBox="0 0 24 24">
+                              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                            </svg>
+                          ))}
+                          <span className="ml-2 font-bold text-amber-700">{feedback.rating}/5</span>
+                        </div>
+                      </div>
+                      {feedback.comment && (
+                        <p className="text-stone-700 italic bg-white p-3 rounded border border-stone-200 mt-2">"{feedback.comment}"</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-8">No feedback available for today</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Orders by Status Modal */}
+      {showOrdersModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setShowOrdersModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-amber-700 text-white p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">{selectedStatus} Orders</h2>
+              <button onClick={() => setShowOrdersModal(false)} className="text-white hover:text-gray-200">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-88px)]">
+              {loadingDetails ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
+                </div>
+              ) : orderDetails.length > 0 ? (
+                <div className="space-y-4">
+                  {orderDetails.map((order) => (
+                    <div key={order.id} className="border border-stone-200 rounded-lg p-4 bg-stone-50">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <span className="font-bold text-xl text-amber-700">Order #{order.order_number}</span>
+                          <p className="text-sm text-stone-600 mt-1">{order.customer_name} - {order.customer_phone}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-stone-800">₹{(order.total_amount / 100).toFixed(0)}</p>
+                          <p className="text-xs text-stone-500">{new Date(order.created_at).toLocaleTimeString('en-IN')}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 mt-3 pt-3 border-t border-stone-200">
+                        {order.order_items?.map((item: any, idx: number) => (
+                          <div key={idx} className="flex justify-between text-sm">
+                            <span className="text-stone-700">{item.menu_items?.name} x {item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-8">No {selectedStatus} orders for today</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

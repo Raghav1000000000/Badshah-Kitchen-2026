@@ -4,27 +4,28 @@
 
 /**
  * Format date as "Month DD, YYYY" (e.g., "Jan 15, 2024")
+ * Uses Indian locale
  */
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.toLocaleString('en-US', { month: 'short' });
-  const year = date.getFullYear();
-  return `${month} ${day}, ${year}`;
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
 }
 
 /**
  * Format time as "HH:MM AM/PM" (e.g., "2:30 PM")
+ * Uses local timezone for accurate display
  */
 export function formatTime(dateString: string): string {
   const date = new Date(dateString);
-  let hours = date.getHours();
-  const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12; // 0 should be 12
-  const minutesStr = minutes < 10 ? '0' + minutes : minutes;
-  return `${hours}:${minutesStr} ${ampm}`;
+  return date.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 }
 
 /**
