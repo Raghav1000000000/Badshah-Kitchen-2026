@@ -243,9 +243,10 @@ export default function BillPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {new Date(order.created_at).toLocaleTimeString('en-IN', {
-                    hour: 'numeric',
+                    hour: '2-digit',
                     minute: '2-digit',
-                    hour12: true
+                    hour12: true,
+                    timeZone: 'Asia/Kolkata'
                   })}
                 </p>
               </div>

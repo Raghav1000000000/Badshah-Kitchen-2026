@@ -105,6 +105,19 @@ export default function Home() {
   // Check customer identity after mount (client-side only to avoid hydration mismatch)
   useEffect(() => {
     setHasIdentity(hasCustomerIdentity());
+    
+    // Load cart from sessionStorage on mount
+    const savedCart = sessionStorage.getItem("cart");
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        setCart(parsedCart);
+        console.log('🛒 Cart restored from sessionStorage:', parsedCart.length, 'items');
+      } catch (error) {
+        console.error('Failed to parse saved cart:', error);
+        sessionStorage.removeItem("cart");
+      }
+    }
   }, []);
 
   // Save cart to sessionStorage when it changes
@@ -394,106 +407,108 @@ export default function Home() {
           </div>
         )}
 
-        {/* Menu Items Grid */}
+        {/* Menu Items - Horizontal Rectangular Blocks */}
         {!isLoadingMenu && !menuError && filteredItems.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="space-y-3">
             {filteredItems.map((item, index) => (
               <div
                 key={item.id}
-                className="bg-white rounded-xl shadow-md p-5 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-stone-200 animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 border border-stone-200 animate-fade-in flex items-center gap-4"
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-stone-800 text-lg">
+                <div className="flex-1">
+                  <div className="flex items-start justify-between mb-1">
+                    <h3 className="font-bold text-stone-800 text-base">
                       {item.name}
                       {item.is_special && (
-                        <span className="ml-2 inline-flex items-center text-xs bg-amber-600 text-amber-50 px-2.5 py-1 rounded-full font-semibold">
+                        <span className="ml-2 inline-flex items-center text-xs bg-amber-600 text-amber-50 px-2 py-0.5 rounded-full font-semibold">
                           ⭐ Special
                         </span>
                       )}
                     </h3>
-                    <p className="text-sm text-stone-500 mt-1.5 font-medium">{item.category}</p>
                   </div>
-                  <span className="text-xl font-bold text-amber-700 ml-2">
+                  <p className="text-xs text-stone-500 font-medium">{item.category}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-bold text-amber-700 min-w-[60px] text-right">
                     ₹{(item.price / 100).toFixed(0)}
                   </span>
+                  <button
+                    onClick={() => addToCart(item)}
+                    className="bg-amber-700 text-amber-50 px-4 py-2 rounded-lg font-semibold hover:bg-amber-800 transition-all duration-200 transform hover:scale-105 shadow-md whitespace-nowrap"
+                  >
+                    Add +
+                  </button>
                 </div>
-                <button
-                  onClick={() => addToCart(item)}
-                  className="w-full mt-4 bg-amber-700 text-amber-50 py-2.5 rounded-lg font-semibold hover:bg-amber-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                >
-                  Add to Cart
-                </button>
               </div>
             ))}
           </div>
         )}
       </main>
 
-      {/* Cart Footer */}
+      {/* Cart Footer - Compact Version */}
       {cart.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-stone-50 border-t-2 border-amber-700 shadow-2xl animate-slide-up">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            {/* Cart Items */}
-            <div className="mb-4 max-h-48 overflow-y-auto">
+        <div className="fixed bottom-0 left-0 right-0 bg-stone-50 border-t-2 border-amber-700 shadow-2xl animate-slide-up z-50">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            {/* Cart Items - More Compact */}
+            <div className="mb-3 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-stone-300 scrollbar-track-stone-100">
               {cart.map(item => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between py-3 border-b border-stone-200 last:border-b-0 animate-fade-in"
+                  className="flex items-center justify-between py-2 border-b border-stone-200 last:border-b-0 animate-fade-in"
                 >
-                  <div className="flex-1">
-                    <p className="font-semibold text-stone-800">{item.name}</p>
-                    <p className="text-xs text-stone-500 mt-0.5">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-stone-800 text-sm truncate">{item.name}</p>
+                    <p className="text-xs text-stone-500">
                       ₹{(item.price / 100).toFixed(0)} each
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-3">
                     <button
                       onClick={() => removeFromCart(item.id)}
-                      className="w-8 h-8 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center font-bold text-stone-700 transition-all duration-200 transform hover:scale-110"
+                      className="w-7 h-7 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center font-bold text-stone-700 transition-all duration-200 text-sm"
                     >
                       −
                     </button>
-                    <span className="font-bold text-stone-800 w-8 text-center">
+                    <span className="font-bold text-stone-800 w-6 text-center text-sm">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => addToCart(item)}
-                      className="w-8 h-8 rounded-full bg-green-700 hover:bg-green-800 flex items-center justify-center font-bold text-green-50 transition-all duration-200 transform hover:scale-110"
+                      className="w-7 h-7 rounded-full bg-green-700 hover:bg-green-800 flex items-center justify-center font-bold text-green-50 transition-all duration-200 text-sm"
                     >
                       +
                     </button>
                   </div>
-                  <div className="ml-4 font-bold text-amber-700 min-w-[60px] text-right">
+                  <div className="ml-3 font-bold text-amber-700 min-w-[55px] text-right text-sm">
                     ₹{((item.price / 100) * item.quantity).toFixed(0)}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Place Order Section */}
-            <div className="flex items-center justify-between gap-4">
+            {/* Place Order Section - Compact */}
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs text-stone-500 uppercase tracking-wide">
+                <p className="text-xs text-stone-500">
                   {calculateCartItemCount(cart)} {calculateCartItemCount(cart) === 1 ? "item" : "items"}
                 </p>
-                <p className="text-2xl font-bold text-amber-700">
+                <p className="text-xl font-bold text-amber-700">
                   ₹{calculateCartTotal(cart).toFixed(0)}
                 </p>
               </div>
               <button
                 onClick={handlePlaceOrder}
                 disabled={isSubmittingOrder}
-                className="flex-1 max-w-xs py-3.5 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 bg-amber-700 text-amber-50 hover:bg-amber-800 disabled:bg-stone-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                className="flex-1 max-w-xs py-3 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 bg-amber-700 text-amber-50 hover:bg-amber-800 disabled:bg-stone-300 disabled:cursor-not-allowed shadow-lg"
               >
                 {isSubmittingOrder ? (
                   <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Placing Order...
+                    Placing...
                   </span>
                 ) : (
                   "Place Order 🚀"
