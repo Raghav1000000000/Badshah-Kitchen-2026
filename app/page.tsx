@@ -309,20 +309,32 @@ export default function Home() {
       {/* Category Filter */}
       <div className="bg-stone-100 border-b-2 border-stone-300 sticky top-[85px] z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
-                  selectedCategory === category
-                    ? "bg-amber-700 text-amber-50 shadow-md"
-                    : "bg-white text-stone-700 hover:bg-stone-200 shadow-sm border border-stone-300"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="relative">
+            {/* Scroll Indicator - Left */}
+            <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-stone-100 to-transparent pointer-events-none z-10"></div>
+            
+            {/* Scroll Indicator - Right with animated arrow */}
+            <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-stone-100 to-transparent pointer-events-none z-10 flex items-center justify-end pr-2">
+              <svg className="w-4 h-4 text-amber-700 animate-bounce-horizontal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide scroll-smooth snap-x snap-mandatory">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 transform hover:scale-105 snap-start ${
+                    selectedCategory === category
+                      ? "bg-amber-700 text-amber-50 shadow-md"
+                      : "bg-white text-stone-700 hover:bg-stone-200 shadow-sm border border-stone-300"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

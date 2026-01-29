@@ -53,6 +53,15 @@ body {
   }
 }
 
+@keyframes bounce-horizontal {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.5s ease-out forwards;
 }
@@ -63,6 +72,10 @@ body {
 
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
+}
+
+.animate-bounce-horizontal {
+  animation: bounce-horizontal 1.5s ease-in-out infinite;
 }
 
 /* Hide scrollbar but keep functionality */
