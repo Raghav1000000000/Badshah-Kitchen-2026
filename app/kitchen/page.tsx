@@ -422,71 +422,83 @@ export default function KitchenPage() {
           </div>
         )}
 
-        {/* Order Cards */}
+        {/* Order Cards - Compact Mobile Design */}
         {!isLoading && !error && filteredOrders.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filteredOrders.map((order) => {
               const isExpanded = expandedOrderId === order.id;
               return (
               <div
                 key={order.id}
-                className="bg-white rounded border border-gray-300 shadow-sm"
+                className="bg-white rounded-lg shadow-md border-l-4 ${order.status === 'PLACED' ? 'border-red-500' : order.status === 'PREPARING' ? 'border-yellow-500' : order.status === 'READY' ? 'border-green-500' : 'border-gray-300'}"
               >
-                {/* Compact Order Header - Always Visible */}
-                <div className="p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="font-bold text-lg text-gray-900">
-                      #{order.order_number}
+                {/* Compact Header - Always Visible */}
+                <div className="p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-gray-900">#{order.order_number}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getStatusBadge(order.status)}`}>
+                        {order.status}
+                      </span>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {order.customer_name || 'Walk-in'}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {formatTime(order.created_at)}
-                    </div>
-                    <div className="font-bold text-gray-900">
-                      ₹{(order.total_amount / 100).toFixed(2)}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(order.status)}`}>
-                      {order.status}
-                    </span>
                     <button
                       onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                      className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900"
+                      className="text-gray-400 hover:text-gray-600 p-1"
                     >
-                      {isExpanded ? '▲' : '▼'}
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {isExpanded ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        )}
+                      </svg>
                     </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-500">👤 </span>
+                      <span className="font-medium text-gray-900">{order.customer_name || 'Walk-in'}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-gray-500">🕒 </span>
+                      <span className="font-medium text-gray-700">{formatTime(order.created_at)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">📱 </span>
+                      <span className="font-medium text-gray-700">{order.customer_phone || 'N/A'}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-bold text-green-700">₹{(order.total_amount / 100).toFixed(0)}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Expandable Details */}
                 {isExpanded && (
                   <div className="border-t border-gray-200 p-3 bg-gray-50">
-                    {/* Order Items */}
+                    {/* Order Items - Compact */}
                     <div className="mb-3">
-                      <div className="text-xs font-semibold text-gray-600 mb-2">ITEMS</div>
-                      <div className="space-y-1">
+                      <div className="text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">• Items</div>
+                      <div className="space-y-1.5">
                         {order.order_items.map((item) => (
-                          <div key={item.id} className="flex items-center gap-2 text-sm">
-                            <span className="w-6 h-6 rounded bg-gray-900 text-white font-bold text-xs flex items-center justify-center">
+                          <div key={item.id} className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-full bg-gray-900 text-white font-bold text-sm flex items-center justify-center shrink-0">
                               {item.quantity}
                             </span>
-                            <span className="text-gray-900">{item.item_name}</span>
+                            <span className="text-sm font-medium text-gray-900">{item.item_name}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Status Controls */}
+                    {/* Status Controls - Compact */}
                     <div className="flex gap-2">
                       <select
                         value={order.status}
                         onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                         disabled={updatingOrderId === order.id}
-                        className="flex-1 p-2 border border-gray-300 rounded text-sm font-medium text-gray-900 bg-white"
+                        className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-bold text-gray-900 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       >
                         <option value="PLACED">Placed</option>
                         <option value="ACCEPTED">Accepted</option>
@@ -498,9 +510,9 @@ export default function KitchenPage() {
                       <button
                         onClick={() => rejectOrder(order.id)}
                         disabled={updatingOrderId === order.id}
-                        className="px-3 py-2 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                        className="px-4 py-2 rounded-lg text-sm font-bold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
                       >
-                        Reject
+                        ✖
                       </button>
                     </div>
                   </div>
