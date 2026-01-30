@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# k6 load testing
+k6-tests/k6.exe
+k6-tests/*-summary.json
