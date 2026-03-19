@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Badshah's Kitchen icon">
+  <rect width="64" height="64" rx="14" fill="#44403c"/>
+  <circle cx="32" cy="32" r="20" fill="#f59e0b"/>
+  <path d="M20 34h24c0 7-5.4 12-12 12s-12-5-12-12z" fill="#7c2d12"/>
+  <circle cx="26" cy="28" r="2.5" fill="#7c2d12"/>
+  <circle cx="38" cy="28" r="2.5" fill="#7c2d12"/>
+</svg>

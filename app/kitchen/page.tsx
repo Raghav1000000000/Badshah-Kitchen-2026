@@ -87,9 +87,11 @@ export default function KitchenPage() {
       if (fetchError) throw fetchError;
 
       setOrders(data || []);
+      return true;
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError('Failed to load orders. Please refresh.');
+      setError('Failed to load orders. Check Supabase URL and your network connection.');
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -97,29 +99,48 @@ export default function KitchenPage() {
 
   // Fetch orders on mount and subscribe to real-time updates
   useEffect(() => {
-    fetchOrders();
+    let isUnmounted = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    // Subscribe to real-time changes for non-completed orders
-    const channel = supabase
-      .channel('kitchen-orders')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'orders',
-          filter: 'status=neq.COMPLETED', // Only non-completed orders
-        },
-        (payload) => {
-          console.log('Real-time update received:', payload);
-          // Refresh orders when any change happens
-          fetchOrders();
-        }
-      )
-      .subscribe();
+    const init = async () => {
+      const initialFetchSucceeded = await fetchOrders();
+      if (!initialFetchSucceeded || isUnmounted) {
+        return;
+      }
+
+      // Subscribe to real-time changes for non-completed orders
+      channel = supabase
+        .channel('kitchen-orders')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'orders',
+            filter: 'status=neq.COMPLETED', // Only non-completed orders
+          },
+          (payload) => {
+            console.log('Real-time update received:', payload);
+            // Refresh orders when any change happens
+            fetchOrders();
+          }
+        )
+        .subscribe((status) => {
+          if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && channel) {
+            console.error('Realtime unavailable for kitchen. Check Supabase URL/network or enable Realtime.');
+            supabase.removeChannel(channel);
+            channel = null;
+          }
+        });
+    };
+
+    init();
 
     return () => {
-      supabase.removeChannel(channel);
+      isUnmounted = true;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

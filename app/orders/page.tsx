@@ -74,9 +74,11 @@ export default function OrdersPage() {
         }
 
         setOrders(data || []);
+        return true;
       } catch (err) {
         console.error('Error fetching orders:', err);
-        setError('Failed to load orders. Please try again.');
+        setError('Failed to load orders. Check Supabase URL and your network connection.');
+        return false;
       } finally {
         if (showLoading) {
           setIsLoading(false);
@@ -84,30 +86,47 @@ export default function OrdersPage() {
       }
     }
 
-    // Initial fetch with loading indicator
-    fetchOrders(true);
-    
-    // Subscribe to real-time updates for this customer's orders only
-    const channel = supabase
-      .channel(`customer-orders-${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'orders',
-          filter: `session_id=eq.${sessionId}`, // Only this customer's orders
-        },
-        (payload) => {
-          console.log('Real-time order update:', payload);
-          // Refresh orders without loading indicator
-          fetchOrders(false);
-        }
-      )
-      .subscribe();
-    
+    let isUnmounted = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const init = async () => {
+      const initialFetchSucceeded = await fetchOrders(true);
+      if (!initialFetchSucceeded || isUnmounted) {
+        return;
+      }
+
+      channel = supabase
+        .channel(`customer-orders-${sessionId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'orders',
+            filter: `session_id=eq.${sessionId}`, // Only this customer's orders
+          },
+          (payload) => {
+            console.log('Real-time order update:', payload);
+            // Refresh orders without loading indicator
+            fetchOrders(false);
+          }
+        )
+        .subscribe((status) => {
+          if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && channel) {
+            console.error('Realtime unavailable for orders. Check Supabase URL/network or enable Realtime.');
+            supabase.removeChannel(channel);
+            channel = null;
+          }
+        });
+    };
+
+    init();
+
     return () => {
-      supabase.removeChannel(channel);
+      isUnmounted = true;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [sessionId, isLoadingSession]);
 

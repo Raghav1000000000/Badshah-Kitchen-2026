@@ -61,44 +61,64 @@ export default function Home() {
         
         setMenuItems(data || []);
         console.log('✅ Menu items fetched:', data?.length);
+        return true;
       } catch (error) {
         console.error('Error fetching menu items:', error);
-        setMenuError('Failed to load menu items. Please refresh the page.');
+        setMenuError('Failed to load menu items. Check NEXT_PUBLIC_SUPABASE_URL in .env.local and verify your internet/DNS.');
+        return false;
       } finally {
         setIsLoadingMenu(false);
       }
     }
-    
-    fetchMenuItems();
 
-    // Subscribe to menu_items changes for real-time updates
-    const channel = supabase
-      .channel('menu-items-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'menu_items',
-        },
-        (payload) => {
-          console.log('🔔 Realtime: Menu items changed!', payload.eventType, payload);
-          // Refetch menu items when any change happens
-          fetchMenuItems();
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Realtime subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Successfully subscribed to menu_items changes');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Realtime subscription error - check if Realtime is enabled in Supabase');
-        }
-      });
+    let isUnmounted = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const init = async () => {
+      const initialFetchSucceeded = await fetchMenuItems();
+
+      // Only subscribe when the first fetch works, otherwise avoid infinite reconnect noise.
+      if (!initialFetchSucceeded || isUnmounted) {
+        return;
+      }
+
+      channel = supabase
+        .channel('menu-items-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'menu_items',
+          },
+          (payload) => {
+            console.log('🔔 Realtime: Menu items changed!', payload.eventType, payload);
+            // Refetch menu items when any change happens
+            fetchMenuItems();
+          }
+        )
+        .subscribe((status) => {
+          console.log('📡 Realtime subscription status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Successfully subscribed to menu_items changes');
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('❌ Realtime unavailable. Check Supabase URL, internet/DNS, and Realtime settings.');
+            if (channel) {
+              supabase.removeChannel(channel);
+              channel = null;
+            }
+          }
+        });
+    };
+
+    init();
 
     return () => {
-      console.log('🔌 Unsubscribing from menu_items changes');
-      supabase.removeChannel(channel);
+      isUnmounted = true;
+      if (channel) {
+        console.log('🔌 Unsubscribing from menu_items changes');
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

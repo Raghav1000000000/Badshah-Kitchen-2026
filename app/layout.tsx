@@ -7,6 +7,9 @@ import { AdminAuthProvider } from "@/lib/adminAuth";
 export const metadata: Metadata = {
   title: "Badshah's Kitchen",
   description: "Mobile-first café ordering app",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
